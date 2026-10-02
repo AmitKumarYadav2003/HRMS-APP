@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/splash_screen.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const HRMSApp());
@@ -17,17 +18,17 @@ class HRMSApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'HRMS',
       theme: ThemeData(
-  useMaterial3: true,
-  primaryColor: AppColors.primary,
-  scaffoldBackgroundColor: AppColors.background,
-  textTheme: GoogleFonts.interTextTheme(),
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: AppColors.primary,
-    primary: AppColors.primary,
-    surfaceTint: Colors.transparent,
-  ),
-  cardColor: AppColors.card,
-),
+        useMaterial3: true,
+        primaryColor: AppColors.primary,
+        scaffoldBackgroundColor: AppColors.background,
+        textTheme: GoogleFonts.interTextTheme(),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          surfaceTint: Colors.transparent,
+        ),
+        cardColor: AppColors.card,
+      ),
       home: const SplashScreen(),
     );
   }
@@ -45,7 +46,6 @@ class HRMSApp extends StatelessWidget {
 //   static const muted = Color(0xFF6B7280);
 //   static const border = Color(0xFFE4E9F0);
 // }
-
 
 // class AppColors {
 //   static const primary = Color(0xFF2E5FE8);

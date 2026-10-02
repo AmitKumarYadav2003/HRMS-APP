@@ -20,13 +20,13 @@ class _QuickActionsRowState extends State<QuickActionsRow> {
   @override
   Widget build(BuildContext context) {
     final allActions = [
-      _buildAction(context, Icons.edit_calendar_rounded, 'Apply\nLeave', () {
+      _buildAction(context, Icons.edit_calendar_rounded, 'Apply Leave', () {
         Navigator.push(context, slideRoute(const ApplyLeaveScreen()));
       }),
       _buildAction(context, Icons.description_rounded, 'Payslips', () {
         Navigator.push(context, slideRoute(const PayslipScreen()));
       }),
-      _buildAction(context, Icons.calendar_month_rounded, 'Holiday\nCalendar', () {
+      _buildAction(context, Icons.calendar_month_rounded, 'Holidays', () {
         Navigator.push(context, slideRoute(const HolidayCalendarScreen()));
       }),
       _buildAction(context, Icons.folder_outlined, 'Documents', () {
@@ -66,8 +66,8 @@ class _QuickActionsRowState extends State<QuickActionsRow> {
             crossAxisCount: 4,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 6,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 4,
             childAspectRatio: 0.8,
             children: _showAll ? allActions : allActions.sublist(0, 4),
           ),
@@ -95,7 +95,7 @@ class _QuickActionsRowState extends State<QuickActionsRow> {
             ),
             child: Icon(icon, color: AppColors.primary, size: 21),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(label, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w700, color: const Color(0xFF5B5470), height: 1.3)),
         ],
       ),
