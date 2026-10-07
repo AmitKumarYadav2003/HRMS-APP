@@ -12,6 +12,9 @@ import '../widgets/announcements_section.dart';
 import '../widgets/stats_overview_card.dart';
 import '../widgets/streak_card.dart';
 import '../main.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,6 +25,36 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
+  String _userName = '';
+
+@override
+void initState() {
+  super.initState();
+  _fetchUser();
+}
+
+Future<void> _fetchUser() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  if (token == null) return;
+
+  final response = await http.get(
+    Uri.parse('http://192.168.1.22:8000/api/user'),
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+
+    setState(() {
+      _userName = data['name'];
+    });
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +108,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          const DashboardTopBar(),
+          DashboardTopBar(userName: _userName),
           const SizedBox(height: 12),
           const HeroCheckinCard(),
           const SizedBox(height: 12),

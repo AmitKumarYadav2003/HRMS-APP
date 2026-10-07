@@ -6,7 +6,8 @@ import '../screens/notifications_screen.dart';
 import '../utils/page_transitions.dart';
 
 class DashboardTopBar extends StatefulWidget {
-  const DashboardTopBar({super.key});
+  final String userName;
+  const DashboardTopBar({super.key, this.userName = ''});
 
   @override
   State<DashboardTopBar> createState() => _DashboardTopBarState();
@@ -14,6 +15,19 @@ class DashboardTopBar extends StatefulWidget {
 
 class _DashboardTopBarState extends State<DashboardTopBar> with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
+
+  String get _displayName =>
+      widget.userName.trim().isNotEmpty ? widget.userName.trim() : 'Amit Yadav';
+
+  String get _initials {
+    final parts = _displayName.split(RegExp(r'\s+'));
+    if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    } else if (_displayName.isNotEmpty) {
+      return _displayName.substring(0, _displayName.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return 'AM';
+  }
 
   @override
   void initState() {
@@ -51,7 +65,7 @@ class _DashboardTopBarState extends State<DashboardTopBar> with SingleTickerProv
                 ),
                 child: Center(
                   child: Text(
-                    'AM',
+                    _initials,
                     style: GoogleFonts.poppins(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w800,
@@ -73,7 +87,7 @@ class _DashboardTopBarState extends State<DashboardTopBar> with SingleTickerProv
                     ),
                   ),
                   Text(
-                    'Amit Yadav',
+                    _displayName,
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import 'dashboard_screen.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatefulWidget {
@@ -22,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   if (_formKey.currentState!.validate()) {
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/login'),
+        Uri.parse('http://192.168.1.22:8000/api/login'),
         headers: {'Accept': 'application/json'},
         body: {
           'email': _emailController.text,
@@ -31,10 +32,15 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 200) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        );
-      } else {
+  final data = jsonDecode(response.body);
+
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('token', data['token']);
+
+  Navigator.of(context).pushReplacement(
+    MaterialPageRoute(builder: (_) => const DashboardScreen()),
+  );
+} else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid email or password')),
         );
@@ -295,9 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           elevation: 4,
         ),
-        onPressed: (){  Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        );},
+        onPressed: _handleLogin,
         child: const Text(
           'Log In',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),

@@ -4,12 +4,17 @@ import '../main.dart';
 
 class SlideToPunch extends StatefulWidget {
   final bool punched;
+  final String? label;
+  final bool isCompleted;
   final VoidCallback onComplete;
   final bool isDark;
+
   const SlideToPunch({
     super.key,
     required this.punched,
     required this.onComplete,
+    this.label,
+    this.isCompleted = false,
     this.isDark = true,
   });
 
@@ -22,13 +27,44 @@ class _SlideToPunchState extends State<SlideToPunch> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isCompleted) {
+      return Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: const Color(0xFF10B981).withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 18),
+              const SizedBox(width: 8),
+              Text(
+                widget.label ?? 'Completed for Today',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF047857),
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final displayText = widget.label ??
+        (widget.punched ? 'Slide to Punch Out' : 'Slide to Punch In');
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxDrag = constraints.maxWidth - 56;
         return Container(
           height: 56,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Stack(
@@ -36,7 +72,7 @@ class _SlideToPunchState extends State<SlideToPunch> {
             children: [
               Center(
                 child: Text(
-                  widget.punched ? 'Slide to Punch In' : 'Slide to Punch Out',
+                  displayText,
                   style: GoogleFonts.inter(
                     color: widget.isDark ? Colors.white : AppColors.primaryDark,
                     fontSize: 13.5,
