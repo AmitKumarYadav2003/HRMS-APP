@@ -1,55 +1,108 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import 'login_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late Future<Map<String, dynamic>> _profileData;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileData = _fetchProfile();
+  }
+
+  Future<Map<String, dynamic>> _fetchProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    
+    final response = await http.get(
+      Uri.parse('http://192.168.1.22:8000/api/user'), // Replace IP
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load profile');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderCard(),
-              const SizedBox(height: 18),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    _sectionLabel('Personal Info'),
-                    const SizedBox(height: 10),
-                    _buildInfoCard(context),
-                    const SizedBox(height: 22),
-                    _sectionLabel('About'),
-                    const SizedBox(height: 10),
-                    _buildAboutCard(),
-                    const SizedBox(height: 22),
-                    _sectionLabel('Settings'),
-                    const SizedBox(height: 10),
-                    _buildSettingsCard(context),
-                    const SizedBox(height: 20),
-                    _buildLogoutButton(context),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Version 1.0.0',
-                      style: GoogleFonts.inter(
-                        fontSize: 10.5,
-                        color: AppColors.muted,
-                      ),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _profileData,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+        
+        if (snapshot.hasError) {
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(child: Text('Error: ${snapshot.error}')),
+          );
+        }
+
+        final user = snapshot.data ?? {};
+        
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderCard(user),
+                  const SizedBox(height: 18),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        _sectionLabel('Personal Info'),
+                        const SizedBox(height: 10),
+                        _buildInfoCard(user),
+                        const SizedBox(height: 22),
+                        _sectionLabel('About'),
+                        const SizedBox(height: 10),
+                        _buildAboutCard(user),
+                        const SizedBox(height: 22),
+                        _sectionLabel('Settings'),
+                        const SizedBox(height: 10),
+                        _buildSettingsCard(context),
+                        const SizedBox(height: 20),
+                        _buildLogoutButton(context),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Version 1.0.0',
+                          style: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                      ],
                     ),
-                    const SizedBox(height: 30),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -74,7 +127,13 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderCard() {
+  Widget _buildHeaderCard(Map<String, dynamic> user) {
+    final name = user['name'] ?? 'N/A';
+    final email = user['email'] ?? 'N/A';
+    final initials = name.isNotEmpty 
+        ? name.split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
+        : 'NA';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
@@ -82,7 +141,7 @@ class ProfileScreen extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.primary,
-            AppColors.primaryLight2.withOpacity(0.75),
+            AppColors.primaryLight2.withValues(alpha: 0.75),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -93,7 +152,7 @@ class ProfileScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.25),
+            color: AppColors.primary.withValues(alpha: 0.25),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -109,12 +168,12 @@ class ProfileScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     width: 3,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 14,
                       offset: const Offset(0, 6),
                     ),
@@ -122,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    'AM',
+                    initials,
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: 28,
@@ -142,7 +201,7 @@ class ProfileScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 6,
                       ),
                     ],
@@ -158,7 +217,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Amit Yadav',
+            name,
             style: GoogleFonts.poppins(
               color: Colors.white,
               fontSize: 19,
@@ -167,9 +226,9 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'amit.yadav@company.com',
+            email,
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
               fontSize: 12.5,
             ),
           ),
@@ -204,12 +263,12 @@ class ProfileScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.16),
+              color: Colors.white.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: Colors.white.withOpacity(0.25)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
             ),
             child: Text(
-              'Employee ID: HR2026',
+              'Employee ID: ${user['id'] ?? 'N/A'}',
               style: GoogleFonts.inter(
                 color: Colors.white,
                 fontSize: 11.5,
@@ -222,32 +281,27 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(BuildContext context) {
+  Widget _buildInfoCard(Map<String, dynamic> user) {
     final items = [
       {
         'icon': Icons.business_center_outlined,
         'label': 'Department',
-        'value': 'Product Design',
+        'value': user['department'] ?? 'N/A',
       },
       {
         'icon': Icons.badge_outlined,
         'label': 'Designation',
-        'value': 'Senior UI/UX Designer',
+        'value': user['designation'] ?? 'N/A',
       },
       {
         'icon': Icons.calendar_today_outlined,
         'label': 'Date of Joining',
-        'value': '15 Mar 2023',
+        'value': user['date_of_joining'] ?? 'N/A',
       },
       {
         'icon': Icons.phone_outlined,
         'label': 'Phone Number',
-        'value': '+91 98765 43210',
-      },
-      {
-        'icon': Icons.location_on_outlined,
-        'label': 'Location',
-        'value': 'Bangalore, India',
+        'value': user['phone'] ?? 'N/A',
       },
     ];
 
@@ -257,7 +311,7 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.06),
+            color: AppColors.primary.withValues(alpha: 0.06),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -326,7 +380,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAboutCard() {
+  Widget _buildAboutCard(Map<String, dynamic> user) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -335,14 +389,14 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.06),
+            color: AppColors.primary.withValues(alpha: 0.06),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Text(
-        'Passionate about creating user-centered digital experiences.',
+        'Employee at SpeedforceEv',
         style: GoogleFonts.inter(
           fontSize: 12.5,
           color: AppColors.muted,
@@ -370,7 +424,7 @@ class ProfileScreen extends StatelessWidget {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.06),
+              color: AppColors.primary.withValues(alpha: 0.06),
               blurRadius: 14,
               offset: const Offset(0, 4),
             ),
