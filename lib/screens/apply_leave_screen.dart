@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 
 class ApplyLeaveScreen extends StatefulWidget {
-  const ApplyLeaveScreen({super.key});
+  final VoidCallback? onBack;
+
+  const ApplyLeaveScreen({
+    super.key,
+    this.onBack,
+  });
 
   @override
   State<ApplyLeaveScreen> createState() => _ApplyLeaveScreenState();
@@ -14,10 +21,20 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
   DateTime? _fromDate;
   DateTime? _toDate;
   final _reasonController = TextEditingController();
+  bool _isLoading = false;
 
   int get _totalDays {
     if (_fromDate == null || _toDate == null) return 0;
     return _toDate!.difference(_fromDate!).inDays + 1;
+  }
+
+  void _resetForm() {
+    setState(() {
+      _selectedType = 0;
+      _fromDate = null;
+      _toDate = null;
+      _reasonController.clear();
+    });
   }
 
   Future<void> _pickDate(bool isFrom) async {
@@ -90,7 +107,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     return Row(
       children: [
         GestureDetector(
-          onTap: () => Navigator.pop(context),
+          onTap: () => widget.onBack,
           child: Container(
             width: 34,
             height: 34,
@@ -254,22 +271,74 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
           ),
           elevation: 4,
         ),
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Leave request submitted')),
-          );
-          Navigator.pop(context);
-        },
-        child: const Text(
-          'Submit Request',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-        ),
+        onPressed: _isLoading ? null : _submitLeave,
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                ),
+              )
+            : const Text(
+                'Submit Request',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
       ),
     );
   }
+
+  Future<void> _submitLeave() async {
+    if (_fromDate == null || _toDate == null || _reasonController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final response = await http.post(
+        Uri.parse('http://192.168.1.22:8000/api/leave/apply'),
+        headers: {'Authorization': 'Bearer $token'},
+        body: {
+          'from_date': _fromDate.toString().split(' ')[0],
+          'to_date': _toDate.toString().split(' ')[0],
+          'leave_type': _leaveTypes[_selectedType],
+          'reason': _reasonController.text,
+        },
+      );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          _resetForm();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Leave request submitted successfully')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error submitting leave')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
 }
 
-// Same form, but without back-button header — used inside Leave screen's tab
 class ApplyLeaveEmbedded extends StatelessWidget {
   const ApplyLeaveEmbedded({super.key});
 
