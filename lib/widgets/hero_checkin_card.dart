@@ -5,11 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
-import 'slide_to_punch.dart';
+// import 'slide_to_punch.dart';
 
 class HeroCheckinCard extends StatefulWidget {
-  const HeroCheckinCard({super.key});
+const HeroCheckinCard({
+  super.key,
+  this.refreshKey = 0,
+});
 
+final int refreshKey;
   @override
   State<HeroCheckinCard> createState() => _HeroCheckinCardState();
 }
@@ -24,10 +28,22 @@ class _HeroCheckinCardState extends State<HeroCheckinCard> {
   bool get _hasCheckedOut => _checkOutTime != null && _checkOutTime!.isNotEmpty;
 
   @override
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
+  _fetchTodayAttendance();
+}
+
+Future<void> refreshAttendance() async {
+  await _fetchTodayAttendance();
+}
+@override
+void didUpdateWidget(covariant HeroCheckinCard oldWidget) {
+  super.didUpdateWidget(oldWidget);
+
+  if (oldWidget.refreshKey != widget.refreshKey) {
     _fetchTodayAttendance();
   }
+}
 
   String _formatTime(String? timeStr) {
     if (timeStr == null || timeStr.trim().isEmpty) return '--:--';
@@ -247,13 +263,13 @@ class _HeroCheckinCardState extends State<HeroCheckinCard> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        if (_hasCheckedOut)
-                          const Icon(
-                            Icons.check_circle_rounded,
-                            color: Color(0xFF6EE7B7),
-                            size: 15,
-                          ),
-                        if (_hasCheckedOut) const SizedBox(width: 4),
+                        // if (_hasCheckedOut)
+                        //   const Icon(
+                        //     Icons.check_circle_rounded,
+                        //     color: Color(0xFF6EE7B7),
+                        //     size: 15,
+                        //   ),
+                        // if (_hasCheckedOut) const SizedBox(width: 4),
                         Text(
                           _isLoading
                               ? '...'
@@ -276,37 +292,37 @@ class _HeroCheckinCardState extends State<HeroCheckinCard> {
             ),
           ),
           const SizedBox(height: 14),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.accent,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            padding: const EdgeInsets.all(4),
-            child: _isLoading
-                ? const SizedBox(
-                    height: 56,
-                    child: Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                  )
-                : SlideToPunch(
-                    punched: _hasCheckedIn,
-                    isCompleted: _hasCheckedOut,
-                    label: _isSubmitting
-                        ? 'Updating...'
-                        : (_hasCheckedOut
-                            ? 'Completed for Today'
-                            : (!_hasCheckedIn
-                                ? 'Slide to Punch In'
-                                : 'Slide to Punch Out')),
-                    onComplete: _handlePunch,
-                    isDark: false,
-                  ),
-          ),
+          // Container(
+          //   decoration: BoxDecoration(
+          //     color: AppColors.orangeLight,
+          //     borderRadius: BorderRadius.circular(999),
+          //   ),
+          //   padding: const EdgeInsets.all(4),
+          //   child: _isLoading
+          //       ? const SizedBox(
+          //           height: 56,
+          //           child: Center(
+          //             child: SizedBox(
+          //               width: 20,
+          //               height: 20,
+          //               child: CircularProgressIndicator(strokeWidth: 2),
+          //             ),
+          //           ),
+          //         )
+          //       : SlideToPunch(
+          //           punched: _hasCheckedIn,
+          //           isCompleted: _hasCheckedOut,
+          //           label: _isSubmitting
+          //               ? 'Updating...'
+          //               : (_hasCheckedOut
+          //                   ? 'Completed for Today'
+          //                   : (!_hasCheckedIn
+          //                       ? 'Slide to Punch In'
+          //                       : 'Slide to Punch Out')),
+          //           onComplete: _handlePunch,
+          //           isDark: false,
+          //         ),
+          // ),
         ],
       ),
     );

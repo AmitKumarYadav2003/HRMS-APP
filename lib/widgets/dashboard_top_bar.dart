@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
-import '../screens/search_screen.dart';
+// import '../screens/search_screen.dart';
 import '../screens/notifications_screen.dart';
 import '../utils/page_transitions.dart';
 
@@ -16,18 +16,28 @@ class DashboardTopBar extends StatefulWidget {
 class _DashboardTopBarState extends State<DashboardTopBar> with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
 
-  String get _displayName =>
-      widget.userName.trim().isNotEmpty ? widget.userName.trim() : 'Amit Yadav';
+  String get _displayName {
+  final name = widget.userName.trim();
 
-  String get _initials {
-    final parts = _displayName.split(RegExp(r'\s+'));
-    if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    } else if (_displayName.isNotEmpty) {
-      return _displayName.substring(0, _displayName.length >= 2 ? 2 : 1).toUpperCase();
-    }
-    return 'AM';
+  if (name.isEmpty) return 'Amit';
+
+  return name.split(RegExp(r'\s+')).first;
+}
+String get _initials {
+  final name = widget.userName.trim();
+  if (name.isEmpty) return 'AM';
+
+  final parts = name.split(RegExp(r'\s+'));
+
+  if (parts.length >= 2) {
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
+
+  return parts.first.substring(
+    0,
+    parts.first.length >= 2 ? 2 : 1,
+  ).toUpperCase();
+}
 
   @override
   void initState() {
@@ -79,7 +89,7 @@ class _DashboardTopBarState extends State<DashboardTopBar> with SingleTickerProv
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Good morning',
+                    'Welcome Back,',
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       color: Colors.white.withOpacity(0.85),
@@ -100,30 +110,30 @@ class _DashboardTopBarState extends State<DashboardTopBar> with SingleTickerProv
           ),
           Row(
             children: [
-              GestureDetector(
-                onTap: () =>
-                    Navigator.push(context, slideRoute(const SearchScreen())),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: BorderRadius.circular(11),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.08),
-                        blurRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.search_rounded,
-                    color: AppColors.primary,
-                    size: 18,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
+              // GestureDetector(
+              //   onTap: () =>
+              //       Navigator.push(context, slideRoute(const SearchScreen())),
+              //   child: Container(
+              //     width: 36,
+              //     height: 36,
+              //     decoration: BoxDecoration(
+              //       color: AppColors.card,
+              //       borderRadius: BorderRadius.circular(11),
+              //       boxShadow: [
+              //         BoxShadow(
+              //           color: AppColors.primary.withOpacity(0.08),
+              //           blurRadius: 10,
+              //         ),
+              //       ],
+              //     ),
+              //     child: const Icon(
+              //       Icons.search_rounded,
+              //       color: AppColors.primary,
+              //       size: 18,
+              //     ),
+              //   ),
+              // ),
+              // const SizedBox(width: 8),
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,

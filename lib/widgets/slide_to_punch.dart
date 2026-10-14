@@ -27,33 +27,32 @@ class _SlideToPunchState extends State<SlideToPunch> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isCompleted) {
-      return Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: const Color(0xFF10B981).withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
-        ),
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 18),
-              const SizedBox(width: 8),
-              Text(
-                widget.label ?? 'Completed for Today',
-                style: GoogleFonts.inter(
-                  color: const Color(0xFF047857),
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+  if (widget.isCompleted) {
+  return Container(
+    height: 56,
+    decoration: BoxDecoration(
+      color: AppColors.orangeLight,
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // const Icon(Icons.check_circle_rounded, color: AppColors.orange, size: 20),
+          const SizedBox(width: 10),
+          Text(
+            widget.label ?? 'Completed for Today',
+            style: GoogleFonts.poppins(
+              color: AppColors.text,
+              fontSize: 14.5,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-        ),
-      );
-    }
+        ],
+      ),
+    ),
+  );
+}
 
     final displayText = widget.label ??
         (widget.punched ? 'Slide to Punch Out' : 'Slide to Punch In');

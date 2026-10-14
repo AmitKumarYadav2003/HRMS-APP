@@ -15,8 +15,6 @@ class QuickActionsRow extends StatefulWidget {
 }
 
 class _QuickActionsRowState extends State<QuickActionsRow> {
-  bool _showAll = false;
-
   @override
   Widget build(BuildContext context) {
     final allActions = [
@@ -51,16 +49,7 @@ class _QuickActionsRowState extends State<QuickActionsRow> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Quick actions', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.text)),
-              GestureDetector(
-                onTap: () => setState(() => _showAll = !_showAll),
-                child: Text(_showAll ? 'View less' : 'View all', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.primary)),
-              ),
-            ],
-          ),
+          Text('Quick actions', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.text)),
           const SizedBox(height: 16),
           GridView.count(
             crossAxisCount: 4,
@@ -69,7 +58,7 @@ class _QuickActionsRowState extends State<QuickActionsRow> {
             mainAxisSpacing: 4,
             crossAxisSpacing: 4,
             childAspectRatio: 0.8,
-            children: _showAll ? allActions : allActions.sublist(0, 4),
+            children: allActions,
           ),
         ],
       ),

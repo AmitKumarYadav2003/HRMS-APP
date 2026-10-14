@@ -10,7 +10,7 @@ import '../screens/payslip_screen.dart';
 import '../screens/profile_screen.dart';
 import '../widgets/announcements_section.dart';
 import '../widgets/stats_overview_card.dart';
-import '../widgets/streak_card.dart';
+import '../widgets/punch_section.dart';
 import '../main.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,36 +25,39 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
+  int _attendanceRefreshKey = 0;
   String _userName = '';
+  String _fullName = '';
 
-@override
-void initState() {
-  super.initState();
-  _fetchUser();
-}
-
-Future<void> _fetchUser() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-
-  if (token == null) return;
-
-  final response = await http.get(
-    Uri.parse('http://192.168.1.22:8000/api/user'),
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-
-    setState(() {
-      _userName = data['name'];
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchUser();
   }
-}
+
+  Future<void> _fetchUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) return;
+
+    final response = await http.get(
+      Uri.parse('http://192.168.1.22:8000/api/user'),
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      setState(() {
+  _fullName = (data['name'] ?? '').toString().trim();
+
+  _userName = _fullName.isEmpty
+      ? ''
+      : _fullName.split(RegExp(r'\s+')).first;
+});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,17 +111,23 @@ Future<void> _fetchUser() async {
     return SingleChildScrollView(
       child: Column(
         children: [
-          DashboardTopBar(userName: _userName),
+          DashboardTopBar(userName: _fullName),
           const SizedBox(height: 12),
-          const HeroCheckinCard(),
+          HeroCheckinCard(refreshKey: _attendanceRefreshKey),
+          const SizedBox(height: 12),
+          PunchSection(
+            onPunchSuccess: () {
+              setState(() {
+                _attendanceRefreshKey++;
+              });
+            },
+          ),
           const SizedBox(height: 12),
           const AnnouncementsSection(),
           const SizedBox(height: 12),
           const QuickActionsRow(),
           const SizedBox(height: 12),
           const StatsOverviewCard(),
-          const SizedBox(height: 12),
-          const StreakCard(),
           const SizedBox(height: 12),
           const UpcomingHolidayCard(),
           const SizedBox(height: 20),

@@ -25,6 +25,7 @@ class AnnouncementsSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          // First announcement
           GestureDetector(
             onTap: () => Navigator.push(context, slideRoute(const AnnouncementsScreen())),
             child: Container(
@@ -33,11 +34,11 @@ class AnnouncementsSection extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
-  width: 38,
-  height: 38,
-  decoration: BoxDecoration(color: AppColors.orangeLight, borderRadius: BorderRadius.circular(10)),
-  child: const Icon(Icons.shield_outlined, color: AppColors.orange, size: 17),
-),
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(color: AppColors.orangeLight, borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.shield_outlined, color: AppColors.orange, size: 17),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -45,6 +46,36 @@ class AnnouncementsSection extends StatelessWidget {
                       children: [
                         Text('Open enrollment is live!', style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.text)),
                         Text('Review your benefits before Sep 1.', style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.muted)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.border, size: 20),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Second announcement
+          GestureDetector(
+            onTap: () => Navigator.push(context, slideRoute(const AnnouncementsScreen())),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.07), blurRadius: 12)]),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.groups_rounded, color: Color(0xFF10B981), size: 17),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Team town hall', style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.text)),
+                        Text('Join us Thursday at 4:00 PM.', style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.muted)),
                       ],
                     ),
                   ),

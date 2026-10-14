@@ -12,7 +12,7 @@ class StatsOverviewCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppColors.accent,
+          color: AppColors.orangeLight,
           borderRadius: BorderRadius.circular(18),
         ),
         child: Column(

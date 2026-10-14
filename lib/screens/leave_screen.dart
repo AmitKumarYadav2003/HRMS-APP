@@ -17,76 +17,105 @@ class _LeaveScreenState extends State<LeaveScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final List<Map<String, dynamic>> _history = [
-    {
-      'type': 'Sick Leave',
-      'date': 'Tue, 10 Jun 2026',
-      'days': '1 Day',
-      'status': 'Approved',
-    },
-    {
-      'type': 'Casual Leave',
-      'date': 'Fri, 16 May 2026',
-      'days': '1 Day',
-      'status': 'Approved',
-    },
-    {
-      'type': 'Annual Leave',
-      'date': 'Mon, 07 Apr - Fri, 11 Apr 2026',
-      'days': '5 Days',
-      'status': 'Approved',
-    },
-    {
-      'type': 'Annual Leave',
-      'date': 'Mon, 16 Dec - Tue, 17 Dec 2025',
-      'days': '2 Days',
-      'status': 'Rejected',
-    },
-  ];
+  final List<Map<String, dynamic>> _history = [];
+  int _earnedBalance = 12;
+  int _sickBalance = 5;
+  int _casualBalance = 10;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _fetchLeaveHistory();
+    _fetchLeaveBalance();
   }
 
   Future<void> _fetchLeaveHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) return;
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.1.22:8000/api/leave/history'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (!mounted) return;
+
+        setState(() {
+          _history.clear();
+
+          for (final leave in data['data']) {
+            final fromDate = DateTime.parse(leave['from_date']);
+            final toDate = DateTime.parse(leave['to_date']);
+            final days = toDate.difference(fromDate).inDays + 1;
+
+            final rawStatus = (leave['status'] ?? 'pending').toString();
+
+            _history.add({
+              'type': leave['leave_type'] ?? 'Leave',
+              'date': '${leave['from_date']} - ${leave['to_date']}',
+              'days': '$days Day${days > 1 ? 's' : ''}',
+              'status': rawStatus[0].toUpperCase() + rawStatus.substring(1),
+              'admin_remarks': leave['admin_remarks'],
+              'reason': leave['reason'],
+            });
+          }
+        });
+      } else {
+        debugPrint('Leave history failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching leave history: $e');
+    }
+  }
+
+  
+Future<void> _fetchLeaveBalance() async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
 
   if (token == null) return;
 
-  final response = await http.get(
-    Uri.parse('http://192.168.1.22:8000/api/leave/history'),
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-  );
+  try {
+    final response = await http.get(
+      Uri.parse('http://192.168.1.22:8000/api/leave/balance'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+      final data = result['data'];
 
-    setState(() {
-  _history.clear();
+      if (!mounted) return;
 
-  for (final leave in data['data']) {
-    final fromDate = DateTime.parse(leave['from_date']);
-    final toDate = DateTime.parse(leave['to_date']);
-
-    final days = toDate.difference(fromDate).inDays + 1;
-
-    _history.add({
-      'type': leave['leave_type'],
-      'date': '${leave['from_date']} - ${leave['to_date']}',
-      'days': '$days Day${days > 1 ? 's' : ''}',
-      'status': leave['status'],
-    });
-  }
-});
+      setState(() {
+        _earnedBalance =
+            (data['earned']?['remaining'] as num?)?.toInt() ?? 12;
+        _sickBalance =
+            (data['sick']?['remaining'] as num?)?.toInt() ?? 5;
+        _casualBalance =
+            (data['casual']?['remaining'] as num?)?.toInt() ?? 2;
+      });
+    } else {
+      debugPrint('Leave balance failed: ${response.statusCode}');
+    }
+  } catch (e) {
+    debugPrint('Error fetching leave balance: $e');
   }
 }
+
 
   @override
   void dispose() {
@@ -117,12 +146,12 @@ class _LeaveScreenState extends State<LeaveScreen>
                 children: [
                   _buildMyLeaves(),
 
-                   ApplyLeaveScreen(
-        onBack: () async {
-          await _fetchLeaveHistory();
-          _tabController.animateTo(0);
-        },
-      ),
+                  ApplyLeaveScreen(
+                    onBack: () async {
+                      await _fetchLeaveHistory();
+                      _tabController.animateTo(0);
+                    },
+                  ),
 
                   _buildLeaveBalance(),
                 ],
@@ -153,18 +182,18 @@ class _LeaveScreenState extends State<LeaveScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.orange,
+                color: AppColors.orangeLight,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.add_rounded, color: Colors.white, size: 16),
+                  const Icon(Icons.add_rounded, color: AppColors.primaryDark, size: 16),
                   const SizedBox(width: 4),
                   Text(
                     'Apply Leave',
                     style: GoogleFonts.inter(
-                      color: Colors.white,
+                      color: AppColors.primaryDark,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                     ),
@@ -208,14 +237,26 @@ class _LeaveScreenState extends State<LeaveScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: [
-              _miniBalance('12', 'Annual', Icons.calendar_today_rounded),
-              const SizedBox(width: 10),
-              _miniBalance('05', 'Sick', Icons.shield_outlined),
-              const SizedBox(width: 10),
-              _miniBalance('02', 'Casual', Icons.coffee_outlined),
-            ],
-          ),
+  children: [
+    _miniBalance(
+      '$_earnedBalance',
+      'Earned',
+      Icons.calendar_today_rounded,
+    ),
+    const SizedBox(width: 10),
+    _miniBalance(
+      _sickBalance.toString().padLeft(2, '0'),
+      'Sick',
+      Icons.shield_outlined,
+    ),
+    const SizedBox(width: 10),
+    _miniBalance(
+      _casualBalance.toString().padLeft(2, '0'),
+      'Casual',
+      Icons.coffee_outlined,
+    ),
+  ],
+),
           const SizedBox(height: 24),
           Text(
             'Upcoming Leave',
@@ -226,7 +267,29 @@ class _LeaveScreenState extends State<LeaveScreen>
             ),
           ),
           const SizedBox(height: 10),
-          Container(
+          
+...(_upcomingLeaves.isEmpty
+    ? [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            'No upcoming approved leaves',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.muted,
+            ),
+          ),
+        ),
+      ]
+    : _upcomingLeaves.map((leave) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: AppColors.card,
@@ -259,7 +322,7 @@ class _LeaveScreenState extends State<LeaveScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Annual Leave',
+                        '${leave['type']} Leave',
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -267,7 +330,7 @@ class _LeaveScreenState extends State<LeaveScreen>
                         ),
                       ),
                       Text(
-                        'Mon, 25 Aug - Fri, 29 Aug 2026',
+                        leave['date'],
                         style: GoogleFonts.inter(
                           fontSize: 10.5,
                           color: AppColors.muted,
@@ -276,10 +339,13 @@ class _LeaveScreenState extends State<LeaveScreen>
                     ],
                   ),
                 ),
-                _badge('Pending', const Color(0xFFF59E0B)),
+                _badge('Approved', const Color(0xFF16A34A)),
               ],
             ),
           ),
+        );
+      }).toList()),
+
           const SizedBox(height: 24),
           Text(
             'Recent History',
@@ -364,6 +430,20 @@ class _LeaveScreenState extends State<LeaveScreen>
                                   color: AppColors.muted,
                                 ),
                               ),
+
+                              if ((h['admin_remarks'] ?? '')
+                                  .toString()
+                                  .trim()
+                                  .isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Admin remarks: ${h['admin_remarks']}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -379,6 +459,20 @@ class _LeaveScreenState extends State<LeaveScreen>
       }),
     );
   }
+  
+List<Map<String, dynamic>> get _upcomingLeaves {
+  final today = DateTime.now();
+
+  return _history.where((leave) {
+    final dates = (leave['date'] as String).split(' - ');
+    final toDate = DateTime.tryParse(dates.last);
+
+    return toDate != null &&
+        !toDate.isBefore(DateTime(today.year, today.month, today.day)) &&
+        leave['status'] == 'Approved';
+  }).toList();
+}
+
 
   Widget _miniBalance(String value, String label, IconData icon) {
     return Expanded(
@@ -434,77 +528,100 @@ class _LeaveScreenState extends State<LeaveScreen>
     );
   }
 
-  Widget _buildLeaveBalance() {
-    final data = [
-      {'type': 'Annual Leave', 'total': 18, 'used': 6, 'left': 12},
-      {'type': 'Sick Leave', 'total': 8, 'used': 3, 'left': 5},
-      {'type': 'Casual Leave', 'total': 6, 'used': 4, 'left': 2},
-    ];
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
-      child: Column(
-        children: data.map((d) {
-          final progress = (d['used'] as int) / (d['total'] as int);
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.06),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      d['type'] as String,
-                      style: GoogleFonts.inter(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.text,
-                      ),
+  
+Widget _buildLeaveBalance() {
+  final data = [
+    {
+      'type': 'Earned Leave',
+      'total': 12,
+      'used': 12 - _earnedBalance,
+      'left': _earnedBalance,
+    },
+    {
+      'type': 'Sick Leave',
+      'total': 5,
+      'used': 5 - _sickBalance,
+      'left': _sickBalance,
+    },
+    {
+      'type': 'Casual Leave',
+      'total': 10,
+      'used': 10 - _casualBalance,
+      'left': _casualBalance,
+    },
+  ];
+
+  return SingleChildScrollView(
+    padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+    child: Column(
+      children: data.map((d) {
+        final total = d['total'] as int;
+        final used = d['used'] as int;
+        final left = d['left'] as int;
+        final progress = total > 0 ? used / total : 0.0;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.06),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    d['type'] as String,
+                    style: GoogleFonts.inter(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text,
                     ),
-                    Text(
-                      '${d["left"]} left',
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                      ),
+                  ),
+                  Text(
+                    '$left left',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    backgroundColor: AppColors.background,
-                    valueColor: const AlwaysStoppedAnimation(AppColors.primary),
                   ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: progress.clamp(0.0, 1.0),
+                  minHeight: 8,
+                  backgroundColor: AppColors.background,
+                  valueColor:
+                      const AlwaysStoppedAnimation(AppColors.primary),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '${d["used"]} used of ${d["total"]} total',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.muted,
-                  ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '$used used of $total total',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AppColors.muted,
                 ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    ),
+  );
+}
+
 }
