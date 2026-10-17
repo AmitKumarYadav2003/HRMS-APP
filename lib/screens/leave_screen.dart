@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import 'apply_leave_screen.dart';
+import 'dashboard_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -78,44 +79,40 @@ class _LeaveScreenState extends State<LeaveScreen>
     }
   }
 
-  
-Future<void> _fetchLeaveBalance() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+  Future<void> _fetchLeaveBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-  if (token == null) return;
+    if (token == null) return;
 
-  try {
-    final response = await http.get(
-      Uri.parse('http://192.168.1.22:8000/api/leave/balance'),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.1.22:8000/api/leave/balance'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final result = jsonDecode(response.body);
-      final data = result['data'];
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        final data = result['data'];
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      setState(() {
-        _earnedBalance =
-            (data['earned']?['remaining'] as num?)?.toInt() ?? 12;
-        _sickBalance =
-            (data['sick']?['remaining'] as num?)?.toInt() ?? 5;
-        _casualBalance =
-            (data['casual']?['remaining'] as num?)?.toInt() ?? 2;
-      });
-    } else {
-      debugPrint('Leave balance failed: ${response.statusCode}');
+        setState(() {
+          _earnedBalance =
+              (data['earned']?['remaining'] as num?)?.toInt() ?? 12;
+          _sickBalance = (data['sick']?['remaining'] as num?)?.toInt() ?? 5;
+          _casualBalance = (data['casual']?['remaining'] as num?)?.toInt() ?? 10;
+        });
+      } else {
+        debugPrint('Leave balance failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching leave balance: $e');
     }
-  } catch (e) {
-    debugPrint('Error fetching leave balance: $e');
   }
-}
-
 
   @override
   void dispose() {
@@ -139,25 +136,51 @@ Future<void> _fetchLeaveBalance() async {
             const SizedBox(height: 14),
             _buildHeader(),
             const SizedBox(height: 16),
-            _buildTabBar(),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildMyLeaves(),
-
-                  ApplyLeaveScreen(
-                    onBack: () async {
-                      await _fetchLeaveHistory();
-                      _tabController.animateTo(0);
-                    },
-                  ),
-
-                  _buildLeaveBalance(),
-                ],
-              ),
-            ),
+            Expanded(child: _buildMyLeaves()),
           ],
+        ),
+      ),
+      floatingActionButton: Container(
+        width: 60,
+        height: 60,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [AppColors.primary, AppColors.primaryLight2],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ApplyLeaveScreen(
+  leaveBalance: {
+    'Earned': _earnedBalance,
+    'Sick': _sickBalance,
+    'Casual': _casualBalance,
+  },
+  onBack: () async {
+    await _fetchLeaveHistory();
+    if (mounted) Navigator.pop(context);
+  },
+),
+                ),
+              );
+            },
+            child: const Center(
+              child: Icon(Icons.add_rounded, color: Colors.white, size: 28),
+            ),
+          ),
         ),
       ),
     );
@@ -167,39 +190,36 @@ Future<void> _fetchLeaveBalance() async {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          GestureDetector(
+            onTap: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                (route) => false,
+              );
+            },
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.chevron_left_rounded,
+                color: AppColors.primaryDark,
+                size: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
           Text(
             'Leave',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: AppColors.text,
-            ),
-          ),
-          GestureDetector(
-            onTap: () => _tabController.animateTo(1),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.orangeLight,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.add_rounded, color: AppColors.primaryDark, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Apply Leave',
-                    style: GoogleFonts.inter(
-                      color: AppColors.primaryDark,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ],
@@ -237,26 +257,26 @@ Future<void> _fetchLeaveBalance() async {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-  children: [
-    _miniBalance(
-      '$_earnedBalance',
-      'Earned',
-      Icons.calendar_today_rounded,
-    ),
-    const SizedBox(width: 10),
-    _miniBalance(
-      _sickBalance.toString().padLeft(2, '0'),
-      'Sick',
-      Icons.shield_outlined,
-    ),
-    const SizedBox(width: 10),
-    _miniBalance(
-      _casualBalance.toString().padLeft(2, '0'),
-      'Casual',
-      Icons.coffee_outlined,
-    ),
-  ],
-),
+            children: [
+              _miniBalance(
+                '$_earnedBalance',
+                'Earned',
+                Icons.calendar_today_rounded,
+              ),
+              const SizedBox(width: 10),
+              _miniBalance(
+                _sickBalance.toString().padLeft(2, '0'),
+                'Sick',
+                Icons.shield_outlined,
+              ),
+              const SizedBox(width: 10),
+              _miniBalance(
+                _casualBalance.toString().padLeft(2, '0'),
+                'Casual',
+                Icons.coffee_outlined,
+              ),
+            ],
+          ),
           const SizedBox(height: 24),
           Text(
             'Upcoming Leave',
@@ -267,84 +287,84 @@ Future<void> _fetchLeaveBalance() async {
             ),
           ),
           const SizedBox(height: 10),
-          
-...(_upcomingLeaves.isEmpty
-    ? [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Text(
-            'No upcoming approved leaves',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: AppColors.muted,
-            ),
-          ),
-        ),
-      ]
-    : _upcomingLeaves.map((leave) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.06),
-                  blurRadius: 12,
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: const Icon(
-                    Icons.calendar_today_rounded,
-                    color: AppColors.primary,
-                    size: 17,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${leave['type']} Leave',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.text,
-                        ),
+
+          ...(_upcomingLeaves.isEmpty
+              ? [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      'No upcoming approved leaves',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.muted,
                       ),
-                      Text(
-                        leave['date'],
-                        style: GoogleFonts.inter(
-                          fontSize: 10.5,
-                          color: AppColors.muted,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                _badge('Approved', const Color(0xFF16A34A)),
-              ],
-            ),
-          ),
-        );
-      }).toList()),
+                ]
+              : _upcomingLeaves.map((leave) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.06),
+                            blurRadius: 12,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                            child: const Icon(
+                              Icons.calendar_today_rounded,
+                              color: AppColors.primary,
+                              size: 17,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${leave['type']} Leave',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.text,
+                                  ),
+                                ),
+                                Text(
+                                  leave['date'],
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10.5,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _badge('Approved', const Color(0xFF16A34A)),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList()),
 
           const SizedBox(height: 24),
           Text(
@@ -459,20 +479,19 @@ Future<void> _fetchLeaveBalance() async {
       }),
     );
   }
-  
-List<Map<String, dynamic>> get _upcomingLeaves {
-  final today = DateTime.now();
 
-  return _history.where((leave) {
-    final dates = (leave['date'] as String).split(' - ');
-    final toDate = DateTime.tryParse(dates.last);
+  List<Map<String, dynamic>> get _upcomingLeaves {
+    final today = DateTime.now();
 
-    return toDate != null &&
-        !toDate.isBefore(DateTime(today.year, today.month, today.day)) &&
-        leave['status'] == 'Approved';
-  }).toList();
-}
+    return _history.where((leave) {
+      final dates = (leave['date'] as String).split(' - ');
+      final toDate = DateTime.tryParse(dates.last);
 
+      return toDate != null &&
+          !toDate.isBefore(DateTime(today.year, today.month, today.day)) &&
+          leave['status'] == 'Approved';
+    }).toList();
+  }
 
   Widget _miniBalance(String value, String label, IconData icon) {
     return Expanded(
@@ -528,100 +547,97 @@ List<Map<String, dynamic>> get _upcomingLeaves {
     );
   }
 
-  
-Widget _buildLeaveBalance() {
-  final data = [
-    {
-      'type': 'Earned Leave',
-      'total': 12,
-      'used': 12 - _earnedBalance,
-      'left': _earnedBalance,
-    },
-    {
-      'type': 'Sick Leave',
-      'total': 5,
-      'used': 5 - _sickBalance,
-      'left': _sickBalance,
-    },
-    {
-      'type': 'Casual Leave',
-      'total': 10,
-      'used': 10 - _casualBalance,
-      'left': _casualBalance,
-    },
-  ];
+  Widget _buildLeaveBalance() {
+    final data = [
+      {
+        'type': 'Earned Leave',
+        'total': 12,
+        'used': 12 - _earnedBalance,
+        'left': _earnedBalance,
+      },
+      {
+        'type': 'Sick Leave',
+        'total': 5,
+        'used': 5 - _sickBalance,
+        'left': _sickBalance,
+      },
+      {
+        'type': 'Casual Leave',
+        'total': 10,
+        'used': 10 - _casualBalance,
+        'left': _casualBalance,
+      },
+    ];
 
-  return SingleChildScrollView(
-    padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
-    child: Column(
-      children: data.map((d) {
-        final total = d['total'] as int;
-        final used = d['used'] as int;
-        final left = d['left'] as int;
-        final progress = total > 0 ? used / total : 0.0;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+      child: Column(
+        children: data.map((d) {
+          final total = d['total'] as int;
+          final used = d['used'] as int;
+          final left = d['left'] as int;
+          final progress = total > 0 ? used / total : 0.0;
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.06),
-                blurRadius: 10,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    d['type'] as String,
-                    style: GoogleFonts.inter(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  Text(
-                    '$left left',
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: progress.clamp(0.0, 1.0),
-                  minHeight: 8,
-                  backgroundColor: AppColors.background,
-                  valueColor:
-                      const AlwaysStoppedAnimation(AppColors.primary),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.06),
+                  blurRadius: 10,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '$used used of $total total',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: AppColors.muted,
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      d['type'] as String,
+                      style: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.text,
+                      ),
+                    ),
+                    Text(
+                      '$left left',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    ),
-  );
-}
-
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: progress.clamp(0.0, 1.0),
+                    minHeight: 8,
+                    backgroundColor: AppColors.background,
+                    valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$used used of $total total',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
+import 'dashboard_screen.dart';
 
 class PayslipScreen extends StatefulWidget {
   const PayslipScreen({super.key});
@@ -62,7 +63,15 @@ class _PayslipScreenState extends State<PayslipScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 14),
-          _buildHeader('Payslips', () => Navigator.pop(context)),
+          _buildHeader('Payslips', () {
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const DashboardScreen(),
+    ),
+    (route) => false,
+  );
+}),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(18),

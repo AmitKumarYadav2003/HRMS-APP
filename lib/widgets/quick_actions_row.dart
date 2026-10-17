@@ -19,7 +19,18 @@ class _QuickActionsRowState extends State<QuickActionsRow> {
   Widget build(BuildContext context) {
     final allActions = [
       _buildAction(context, Icons.edit_calendar_rounded, 'Apply Leave', () {
-        Navigator.push(context, slideRoute(const ApplyLeaveScreen()));
+        Navigator.push(
+  context,
+  slideRoute(
+    ApplyLeaveScreen(
+      leaveBalance: const {
+        'Earned': 12,
+        'Sick': 5,
+        'Casual': 10,
+      },
+    ),
+  ),
+);
       }),
       _buildAction(context, Icons.description_rounded, 'Payslips', () {
         Navigator.push(context, slideRoute(const PayslipScreen()));
