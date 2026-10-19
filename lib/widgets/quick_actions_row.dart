@@ -6,9 +6,19 @@ import '../screens/holiday_calendar_screen.dart';
 import '../screens/payslip_screen.dart';
 import '../screens/reports_screen.dart';
 import '../utils/page_transitions.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QuickActionsRow extends StatefulWidget {
-  const QuickActionsRow({super.key});
+  final Map<String, dynamic> leaveBalance;
+  final Future<void> Function()? onLeaveApplied;
+
+  const QuickActionsRow({
+    super.key,
+    required this.leaveBalance,
+    this.onLeaveApplied,
+  });
 
   @override
   State<QuickActionsRow> createState() => _QuickActionsRowState();
@@ -16,22 +26,61 @@ class QuickActionsRow extends StatefulWidget {
 
 class _QuickActionsRowState extends State<QuickActionsRow> {
   @override
+
+  Future<Map<String, dynamic>?> _fetchLeaveBalance() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  if (token == null) return null;
+
+  try {
+    final response = await http.get(
+      Uri.parse('http://192.168.1.22:8000/api/leave/balance'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body)['data'];
+
+      return {
+        'Earned': (data['earned']?['remaining'] as num?)?.toInt() ?? 0,
+        'Sick': (data['sick']?['remaining'] as num?)?.toInt() ?? 0,
+        'Casual': (data['casual']?['remaining'] as num?)?.toInt() ?? 0,
+      };
+    }
+  } catch (e) {
+    debugPrint('Leave balance error: $e');
+  }
+
+  return null;
+}
   Widget build(BuildContext context) {
     final allActions = [
-      _buildAction(context, Icons.edit_calendar_rounded, 'Apply Leave', () {
-        Navigator.push(
-  context,
-  slideRoute(
-    ApplyLeaveScreen(
-      leaveBalance: const {
-        'Earned': 12,
-        'Sick': 5,
-        'Casual': 10,
-      },
+      _buildAction(context, Icons.edit_calendar_rounded, 'Apply Leave', () async {
+  final balance = await _fetchLeaveBalance();
+
+  if (!mounted) return;
+
+  if (balance == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Unable to fetch leave balance')),
+    );
+    return;
+  }
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ApplyLeaveScreen(
+        leaveBalance: balance,
+        onBack: null,
+      ),
     ),
-  ),
-);
-      }),
+  );
+}),
       _buildAction(context, Icons.description_rounded, 'Payslips', () {
         Navigator.push(context, slideRoute(const PayslipScreen()));
       }),

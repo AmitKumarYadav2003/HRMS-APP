@@ -161,38 +161,42 @@ Future<void> _pickDate(bool isFrom) async {
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () {
-            widget.onBack?.call();
-          },
-          child: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.chevron_left_rounded,
-              color: AppColors.primaryDark,
-              size: 24,
-            ),
+  return Row(
+    children: [
+      GestureDetector(
+        onTap: () {
+          if (widget.onBack != null) {
+            widget.onBack!.call();
+          } else {
+            Navigator.pop(context);
+          }
+        },
+        child: Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: AppColors.primaryLight,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(
+            Icons.chevron_left_rounded,
+            color: AppColors.primaryDark,
+            size: 24,
           ),
         ),
-        const SizedBox(width: 14),
-        Text(
-  'Apply Leave',
-  style: GoogleFonts.poppins(
-    fontSize: 18,
-    fontWeight: FontWeight.w800,
-    color: AppColors.text,
-  ),
-),
-      ],
-    );
-  }
+      ),
+      const SizedBox(width: 14),
+      Text(
+        'Apply Leave',
+        style: GoogleFonts.poppins(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: AppColors.text,
+        ),
+      ),
+    ],
+  );
+}
 
   Widget _buildSectionLabel(String text) {
     return Text(

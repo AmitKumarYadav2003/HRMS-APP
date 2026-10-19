@@ -28,11 +28,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _attendanceRefreshKey = 0;
   String _userName = '';
   String _fullName = '';
+  int _earnedBalance = 12;
+int _sickBalance = 5;
+int _casualBalance = 10;
 
   @override
   void initState() {
     super.initState();
     _fetchUser();
+    _fetchLeaveBalance();
   }
 
   Future<void> _fetchUser() async {
@@ -58,6 +62,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
 });
     }
   }
+
+Future<void> _fetchLeaveBalance() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  if (token == null) return;
+
+  try {
+    final response = await http.get(
+      Uri.parse('http://192.168.1.22:8000/api/leave/balance'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+      final data = result['data'];
+
+      if (!mounted) return;
+      setState(() {
+        _earnedBalance =
+            (data['earned']?['remaining'] as num?)?.toInt() ?? 12;
+        _sickBalance =
+            (data['sick']?['remaining'] as num?)?.toInt() ?? 5;
+        _casualBalance =
+            (data['casual']?['remaining'] as num?)?.toInt() ?? 10;
+      });
+    }
+  } catch (e) {
+    debugPrint('Error fetching leave balance: $e');
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +163,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 12),
           const AnnouncementsSection(),
           const SizedBox(height: 12),
-          const QuickActionsRow(),
+          QuickActionsRow(
+  leaveBalance: {
+    'Earned': _earnedBalance,
+    'Sick': _sickBalance,
+    'Casual': _casualBalance,
+  },
+  onLeaveApplied: _fetchLeaveBalance,
+),
           const SizedBox(height: 12),
           const StatsOverviewCard(),
           const SizedBox(height: 12),
