@@ -33,10 +33,10 @@ class _AnnouncementsSectionState extends State<AnnouncementsSection> {
     });
 
     try {
-      final items = await _service.fetchAnnouncements(limit: 2);
+      final page = await _service.fetchAnnouncements(perPage: 2);
       if (!mounted) return;
       setState(() {
-        _announcements = items;
+        _announcements = page.items;
         _isLoading = false;
       });
     } catch (e) {
@@ -72,9 +72,10 @@ class _AnnouncementsSectionState extends State<AnnouncementsSection> {
     }
   }
 
-  void _openAll() {
-    Navigator.push(context, slideRoute(const AnnouncementsScreen()));
-  }
+  Future<void> _openAll() async {
+  await Navigator.push(context, slideRoute(const AnnouncementsScreen()));
+  if (mounted) _load();
+}
 
   Widget _buildBody() {
     if (_isLoading) {
