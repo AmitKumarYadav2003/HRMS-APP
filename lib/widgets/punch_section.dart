@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import 'slide_to_punch.dart';
+import '../config/api_config.dart';
 
 class PunchSection extends StatefulWidget {
   // const PunchSection({super.key});
@@ -47,7 +48,7 @@ class _PunchSectionState extends State<PunchSection> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.22:8000/api/attendance/today'),
+        Uri.parse('${ApiConfig.baseUrl}/attendance/today'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
@@ -95,7 +96,7 @@ class _PunchSectionState extends State<PunchSection> {
     try {
       final endpoint = !_hasCheckedIn ? 'check-in' : 'check-out';
       final response = await http.post(
-        Uri.parse('http://192.168.1.22:8000/api/attendance/$endpoint'),
+        Uri.parse('${ApiConfig.baseUrl}/attendance/$endpoint'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',

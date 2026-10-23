@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 // import 'slide_to_punch.dart';
+import '../config/api_config.dart';
 
 class HeroCheckinCard extends StatefulWidget {
 const HeroCheckinCard({
@@ -74,7 +75,7 @@ void didUpdateWidget(covariant HeroCheckinCard oldWidget) {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.22:8000/api/attendance/today'),
+        Uri.parse('${ApiConfig.baseUrl}/attendance/today'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
@@ -121,7 +122,7 @@ void didUpdateWidget(covariant HeroCheckinCard oldWidget) {
     try {
       final endpoint = !_hasCheckedIn ? 'check-in' : 'check-out';
       final response = await http.post(
-        Uri.parse('http://192.168.1.22:8000/api/attendance/$endpoint'),
+        Uri.parse('${ApiConfig.baseUrl}/attendance/$endpoint'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',

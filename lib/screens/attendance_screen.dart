@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
+import '../config/api_config.dart';
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({super.key});
@@ -53,7 +54,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.22:8000/api/attendance/history'),
+        Uri.parse('${ApiConfig.baseUrl}/attendance/history'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',

@@ -4,6 +4,7 @@ import 'dashboard_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   if (_formKey.currentState!.validate()) {
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.22:8000/api/login'),
+        Uri.parse('${ApiConfig.baseUrl}/login'),
         headers: {'Accept': 'application/json'},
         body: {
           'email': _emailController.text,
@@ -251,7 +252,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
+        Flexible(
+        child: Row(
           children: [
             SizedBox(
               width: 20,
@@ -269,6 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
+    ),
         TextButton(
           onPressed: () {},
           style: TextButton.styleFrom(

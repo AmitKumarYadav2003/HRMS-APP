@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/announcement_model.dart';
+import '../config/api_config.dart';
 
 class AnnouncementPage {
   final List<Announcement> items;
@@ -16,8 +17,7 @@ class AnnouncementPage {
 }
 
 class AnnouncementService {
-  static const String _baseUrl = 'http://192.168.1.22:8000/api';
-
+static const String _baseUrl = ApiConfig.baseUrl;
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token') ?? prefs.getString('token');

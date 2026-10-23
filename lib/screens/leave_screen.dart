@@ -6,6 +6,7 @@ import 'dashboard_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 
 class LeaveScreen extends StatefulWidget {
   const LeaveScreen({super.key});
@@ -39,7 +40,7 @@ class _LeaveScreenState extends State<LeaveScreen>
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.22:8000/api/leave/history'),
+        Uri.parse('${ApiConfig.baseUrl}/leave/history'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
@@ -87,7 +88,7 @@ class _LeaveScreenState extends State<LeaveScreen>
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.22:8000/api/leave/balance'),
+        Uri.parse('${ApiConfig.baseUrl}/leave/balance'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',

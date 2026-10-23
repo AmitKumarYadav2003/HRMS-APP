@@ -6,6 +6,7 @@ import '../main.dart';
 // import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
+import '../config/api_config.dart';
 
 class ApplyLeaveScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -655,7 +656,7 @@ Future<void> _submitLeave() async {
 
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://192.168.1.22:8000/api/leave/apply'),
+      Uri.parse('${ApiConfig.baseUrl}/leave/apply'),
     );
 
     request.headers['Authorization'] = 'Bearer $token';

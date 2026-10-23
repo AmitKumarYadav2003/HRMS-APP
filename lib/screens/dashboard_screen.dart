@@ -15,6 +15,7 @@ import '../main.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -46,7 +47,7 @@ int _casualBalance = 10;
     if (token == null) return;
 
     final response = await http.get(
-      Uri.parse('http://192.168.1.22:8000/api/user'),
+      Uri.parse('${ApiConfig.baseUrl}/user'),
       headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
     );
 
@@ -70,7 +71,7 @@ Future<void> _fetchLeaveBalance() async {
 
   try {
     final response = await http.get(
-      Uri.parse('http://192.168.1.22:8000/api/leave/balance'),
+      Uri.parse('${ApiConfig.baseUrl}/leave/balance'),
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',

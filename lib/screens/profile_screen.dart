@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import 'login_screen.dart';
+import 'package:intl/intl.dart';
+import '../config/api_config.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -27,7 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final token = prefs.getString('token');
     
     final response = await http.get(
-      Uri.parse('http://192.168.1.22:8000/api/user'), // Replace IP
+      Uri.parse('${ApiConfig.baseUrl}/user'), // Replace IP
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -281,6 +283,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+String _formatDate(dynamic raw) {
+  if (raw == null) return 'N/A';
+  try {
+    return DateFormat('dd MMM yyyy').format(DateTime.parse(raw.toString()).toLocal());
+  } catch (_) {
+    return raw.toString();
+  }
+}
   Widget _buildInfoCard(Map<String, dynamic> user) {
     final items = [
       {
@@ -296,7 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {
         'icon': Icons.calendar_today_outlined,
         'label': 'Date of Joining',
-        'value': user['date_of_joining'] ?? 'N/A',
+        'value': _formatDate(user['date_of_joining']),
       },
       {
         'icon': Icons.phone_outlined,
