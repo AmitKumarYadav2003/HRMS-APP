@@ -29,7 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final token = prefs.getString('token');
     
     final response = await http.get(
-      Uri.parse('${ApiConfig.baseUrl}/user'), // Replace IP
+      Uri.parse('${ApiConfig.baseUrl}/user'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -192,29 +192,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt_rounded,
-                    color: AppColors.primary,
-                    size: 14,
-                  ),
-                ),
-              ),
+              // Positioned(
+              //   bottom: 0,
+              //   right: 0,
+              //   child: Container(
+              //     width: 28,
+              //     height: 28,
+              //     decoration: BoxDecoration(
+              //       color: Colors.white,
+              //       shape: BoxShape.circle,
+              //       boxShadow: [
+              //         BoxShadow(
+              //           color: Colors.black.withValues(alpha: 0.15),
+              //           blurRadius: 6,
+              //         ),
+              //       ],
+              //     ),
+              //     child: const Icon(
+              //       Icons.camera_alt_rounded,
+              //       color: AppColors.primary,
+              //       size: 14,
+              //     ),
+              //   ),
+              // ),
             ],
           ),
           const SizedBox(height: 14),
@@ -234,33 +234,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontSize: 12.5,
             ),
           ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.orange,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.verified_rounded,
-                  color: Colors.white,
-                  size: 13,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Verified Employee',
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // const SizedBox(height: 10),
+          
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -391,143 +366,184 @@ String _formatDate(dynamic raw) {
   }
 
   Widget _buildAboutCard(Map<String, dynamic> user) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Text(
-        'Employee at SpeedforceEv',
-        style: GoogleFonts.inter(
-          fontSize: 12.5,
-          color: AppColors.muted,
-          height: 1.6,
-        ),
-      ),
-    );
-  }
+  final designation = user['designation'] ?? 'Employee';
+  final department = user['department'];
+  final text = department == null ? designation : '$designation at $department Department';
 
-  Widget _buildSettingsCard(BuildContext context) {
-    final items = [
-      {'icon': Icons.lock_outline_rounded, 'label': 'Change Password'},
-      {'icon': Icons.pin_outlined, 'label': 'Change PIN'},
-      {'icon': Icons.notifications_outlined, 'label': 'Notifications'},
-      {'icon': Icons.help_outline_rounded, 'label': 'Help & Support'},
-      {'icon': Icons.privacy_tip_outlined, 'label': 'Privacy Policy'},
-    ];
-
-    return Material(
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
       color: AppColors.card,
       borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      child: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.06),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.primary.withValues(alpha: 0.06),
+          blurRadius: 14,
+          offset: const Offset(0, 4),
         ),
-        child: Column(
-          children: [
-            for (int i = 0; i < items.length; i++) ...[
-              _settingsRow(
-                items[i]['icon'] as IconData,
-                items[i]['label'] as String,
-              ),
-              if (i != items.length - 1)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Divider(height: 1, color: AppColors.border),
-                ),
-            ],
-          ],
-        ),
+      ],
+    ),
+    child: Text(
+      text,
+      style: GoogleFonts.inter(
+        fontSize: 12.5,
+        color: AppColors.muted,
+        height: 1.6,
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _settingsRow(IconData icon, String label) {
-    return InkWell(
-      onTap: () {},
-      splashColor: Colors.transparent,
-      highlightColor: AppColors.background,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: AppColors.primaryDark, size: 16),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 13.5,
-                  color: AppColors.text,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.border,
-              size: 20,
-            ),
-          ],
+ Widget _buildSettingsCard(BuildContext context) {
+  return Container(
+    decoration: BoxDecoration(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(18),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.primary.withValues(alpha: 0.06),
+          blurRadius: 14,
+          offset: const Offset(0, 4),
         ),
+      ],
+    ),
+    child: Column(
+      children: [
+        _settingsRow(
+          Icons.help_outline_rounded,
+          'Help & Support',
+          () => _showHelp(context),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _settingsRow(IconData icon, String label, VoidCallback onTap) {
+  return InkWell(
+    onTap: onTap,
+    splashColor: Colors.transparent,
+    highlightColor: AppColors.background,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.accent,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: AppColors.primaryDark, size: 16),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 13.5,
+                color: AppColors.text,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: AppColors.border, size: 20),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+void _showHelp(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Help & Support'),
+      content: const Text(
+        'Contact HR for assistance:\n\nEmail: hr@speedforce.com\nPhone: +91 551 234 5678',
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+      ],
+    ),
+  );
+}
 
   Widget _buildLogoutButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-            (route) => false,
-          );
-        },
-        icon: const Icon(Icons.logout_rounded, color: AppColors.text, size: 18),
-        label: Text(
-          'Logout',
-          style: GoogleFonts.inter(
-            color: AppColors.text,
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
-            side: const BorderSide(color: AppColors.border),
-          ),
+  return SizedBox(
+    width: double.infinity,
+    height: 52,
+    child: ElevatedButton.icon(
+      onPressed: () => _confirmLogout(context),
+      icon: const Icon(Icons.logout_rounded, color: AppColors.text, size: 18),
+      label: Text(
+        'Logout',
+        style: GoogleFonts.inter(
+          color: AppColors.text,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
         ),
       ),
-    );
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(999),
+          side: const BorderSide(color: AppColors.border),
+        ),
+      ),
+    ),
+  );
+}
+
+
+  Future<void> _confirmLogout(BuildContext context) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Logout'),
+      content: const Text('Are you sure you want to logout?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('Logout'),
+        ),
+      ],
+    ),
+  );
+
+  if (ok == true && context.mounted) {
+    await _logout(context);
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  try {
+    // Server par token delete hoga
+    await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/logout'),
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+  } catch (_) {
+    // Network na ho to bhi phone se logout hona chahiye
+  }
+
+  // Phone se token hatao
+  await prefs.remove('token');
+
+  if (!context.mounted) return;
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(builder: (_) => const LoginScreen()),
+    (route) => false,
+  );
+}
 }
