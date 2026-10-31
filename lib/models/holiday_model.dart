@@ -11,6 +11,7 @@ class Holiday {
     required this.type,
   });
 
+  //factory : constructor hai jo json data ko object me convert karke return karta hai.
   factory Holiday.fromJson(Map<String, dynamic> json) {
     return Holiday(
       id: json['id'] as int,

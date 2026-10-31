@@ -7,6 +7,7 @@ import '../main.dart';
 import 'login_screen.dart';
 import 'package:intl/intl.dart';
 import '../config/api_config.dart';
+import 'change_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -27,7 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<Map<String, dynamic>> _fetchProfile() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    
+
     final response = await http.get(
       Uri.parse('${ApiConfig.baseUrl}/user'),
       headers: {'Authorization': 'Bearer $token'},
@@ -51,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             body: const Center(child: CircularProgressIndicator()),
           );
         }
-        
+
         if (snapshot.hasError) {
           return Scaffold(
             backgroundColor: AppColors.background,
@@ -60,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
 
         final user = snapshot.data ?? {};
-        
+
         return Scaffold(
           backgroundColor: AppColors.background,
           body: SafeArea(
@@ -132,7 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildHeaderCard(Map<String, dynamic> user) {
     final name = user['name'] ?? 'N/A';
     final email = user['email'] ?? 'N/A';
-    final initials = name.isNotEmpty 
+    final initials = name.isNotEmpty
         ? name.split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
         : 'NA';
 
@@ -234,8 +235,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontSize: 12.5,
             ),
           ),
+
           // const SizedBox(height: 10),
-          
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -258,14 +259,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-String _formatDate(dynamic raw) {
-  if (raw == null) return 'N/A';
-  try {
-    return DateFormat('dd MMM yyyy').format(DateTime.parse(raw.toString()).toLocal());
-  } catch (_) {
-    return raw.toString();
+  String _formatDate(dynamic raw) {
+    if (raw == null) return 'N/A';
+    try {
+      return DateFormat(
+        'dd MMM yyyy',
+      ).format(DateTime.parse(raw.toString()).toLocal());
+    } catch (_) {
+      return raw.toString();
+    }
   }
-}
+
   Widget _buildInfoCard(Map<String, dynamic> user) {
     final items = [
       {
@@ -366,184 +370,203 @@ String _formatDate(dynamic raw) {
   }
 
   Widget _buildAboutCard(Map<String, dynamic> user) {
-  final designation = user['designation'] ?? 'Employee';
-  final department = user['department'];
-  final text = department == null ? designation : '$designation at $department Department';
+    final designation = user['designation'] ?? 'Employee';
+    final department = user['department'];
+    final text = department == null
+        ? designation
+        : '$designation at $department Department';
 
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(
-      color: AppColors.card,
-      borderRadius: BorderRadius.circular(18),
-      boxShadow: [
-        BoxShadow(
-          color: AppColors.primary.withValues(alpha: 0.06),
-          blurRadius: 14,
-          offset: const Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 12.5,
-        color: AppColors.muted,
-        height: 1.6,
-      ),
-    ),
-  );
-}
-
- Widget _buildSettingsCard(BuildContext context) {
-  return Container(
-    decoration: BoxDecoration(
-      color: AppColors.card,
-      borderRadius: BorderRadius.circular(18),
-      boxShadow: [
-        BoxShadow(
-          color: AppColors.primary.withValues(alpha: 0.06),
-          blurRadius: 14,
-          offset: const Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Column(
-      children: [
-        _settingsRow(
-          Icons.help_outline_rounded,
-          'Help & Support',
-          () => _showHelp(context),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _settingsRow(IconData icon, String label, VoidCallback onTap) {
-  return InkWell(
-    onTap: onTap,
-    splashColor: Colors.transparent,
-    highlightColor: AppColors.background,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.accent,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: AppColors.primaryDark, size: 16),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13.5,
-                color: AppColors.text,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.border, size: 20),
         ],
       ),
-    ),
-  );
-}
-
-void _showHelp(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('Help & Support'),
-      content: const Text(
-        'Contact HR for assistance:\n\nEmail: hr@speedforce.com\nPhone: +91 551 234 5678',
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 12.5,
+          color: AppColors.muted,
+          height: 1.6,
+        ),
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
-      ],
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildSettingsCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _settingsRow(
+            Icons.lock_outline_rounded,
+            'Change Password',
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+            ),
+          ),
+          _settingsRow(
+            Icons.help_outline_rounded,
+            'Help & Support',
+            () => _showHelp(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _settingsRow(IconData icon, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      splashColor: Colors.transparent,
+      highlightColor: AppColors.background,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: AppColors.primaryDark, size: 16),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13.5,
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.border,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showHelp(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Help & Support'),
+        content: const Text(
+          'Contact HR for assistance:\n\nEmail: hr@speedforce.com\nPhone: +91 551 234 5678',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildLogoutButton(BuildContext context) {
-  return SizedBox(
-    width: double.infinity,
-    height: 52,
-    child: ElevatedButton.icon(
-      onPressed: () => _confirmLogout(context),
-      icon: const Icon(Icons.logout_rounded, color: AppColors.text, size: 18),
-      label: Text(
-        'Logout',
-        style: GoogleFonts.inter(
-          color: AppColors.text,
-          fontWeight: FontWeight.w700,
-          fontSize: 14,
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton.icon(
+        onPressed: () => _confirmLogout(context),
+        icon: const Icon(Icons.logout_rounded, color: AppColors.text, size: 18),
+        label: Text(
+          'Logout',
+          style: GoogleFonts.inter(
+            color: AppColors.text,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+            side: const BorderSide(color: AppColors.border),
+          ),
         ),
       ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-          side: const BorderSide(color: AppColors.border),
-        ),
-      ),
-    ),
-  );
-}
-
+    );
+  }
 
   Future<void> _confirmLogout(BuildContext context) async {
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('Logout'),
-      content: const Text('Are you sure you want to logout?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          child: const Text('Logout'),
-        ),
-      ],
-    ),
-  );
-
-  if (ok == true && context.mounted) {
-    await _logout(context);
-  }
-}
-
-Future<void> _logout(BuildContext context) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-
-  try {
-    // Server par token delete hoga
-    await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/logout'),
-      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
     );
-  } catch (_) {
-    // Network na ho to bhi phone se logout hona chahiye
+
+    if (ok == true && context.mounted) {
+      await _logout(context);
+    }
   }
 
-  // Phone se token hatao
-  await prefs.remove('token');
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-  if (!context.mounted) return;
-  Navigator.of(context).pushAndRemoveUntil(
-    MaterialPageRoute(builder: (_) => const LoginScreen()),
-    (route) => false,
-  );
-}
+    try {
+      // Server par token delete hoga
+      await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/logout'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+    } catch (_) {
+      // Network na ho to bhi phone se logout hona chahiye
+    }
+
+    // Phone se token hatao
+    await prefs.remove('token');
+
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 }

@@ -22,8 +22,8 @@ class PayslipService {
   void _checkStatus(int statusCode) {
     if (statusCode == 200) return;
     if (statusCode == 401) throw Exception('Login expired. Please log in again.');
-    if (statusCode == 404) throw Exception('Payslip nahi mili.');
-    throw Exception('Payslip load nahi ho payi ($statusCode).');
+    if (statusCode == 404) throw Exception('Payslip not found.');
+    throw Exception('Error fetching payslip ($statusCode).');
   }
 
   Future<List<PayslipSummary>> fetchHistory() async {
